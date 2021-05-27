@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   install_dependencies:
-    working_directory: ~/circleci-nx
+    working_directory: ~/circleci-nx/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
@@ -21,7 +21,7 @@ jobs:
           paths:
             - ~/.cache/yarn
   quality-gates:
-    working_directory: ~/circleci-nx
+    working_directory: ~/circleci-nx/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
@@ -34,7 +34,7 @@ jobs:
           command: |
             yarn nx test
   build:
-    working_directory: ~/circleci-nx
+    working_directory: ~/circleci-nx/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
