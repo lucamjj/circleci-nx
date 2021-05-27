@@ -42,7 +42,11 @@ jobs:
 workflows:
   NX Workflow:
     jobs:
-      - quality-gates
+      - install_dependencies
+      - quality-gates:
+          requires:
+            - install_dependencies
       - build:
           requires:
+            - install_dependencies
             - quality-gates
