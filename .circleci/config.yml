@@ -1,17 +1,31 @@
 version: 2.1
 jobs:
-  build:
+  quality-gates:
     docker:
       - image: alpine:3.7
     steps:
       - checkout
       - run:
-          name: The First Step
+          name: Linting
           command: |
-            echo 'Hello World!'
-            echo 'This is the delivery pipeline'
+            yarn nx lint
       - run:
-          name: Code Has Arrived
+          name: Unit Tests
           command: |
-            ls -al
-            echo '^^^That should look familiar^^^ $my_name'
+            yarn nx test
+  build:
+    docker:
+      - image: alpine:3.7
+    steps:
+      - run:
+          name: Building app
+          command: |
+            yarn nx build
+
+workflows:
+  NX Workflow:
+    jobs:
+      - quality-gates
+      - build:
+          requires:
+            - quality-gates
