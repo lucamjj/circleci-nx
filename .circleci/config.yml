@@ -6,11 +6,10 @@ jobs:
     docker:
       - image: cimg/node:16.2-browsers
     steps:
-      - checkout:
-          path: ~/circleci-nx
+      - checkout
       - run: node --version
       - run: pwd
-      - run: cd ../ && ls
+      - run: ls
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
@@ -23,11 +22,39 @@ jobs:
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+  quality-gates:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:16.2-browsers
+    steps:
+      - checkout:
+          path: ~/circleci-nx
       - run:
           name: Linting
           command: |
             yarn nx lint
+      - run:
+          name: Unit Tests
+          command: |
+            yarn nx test
+  build:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:16.2-browsers
+    steps:
+      - run:
+          name: Building app
+          command: |
+            yarn nx build
+
 workflows:
   NX Workflow:
     jobs:
       - install_dependencies
+      - quality-gates:
+          requires:
+            - install_dependencies
+      - build:
+          requires:
+            - install_dependencies
+            - quality-gates
