@@ -26,13 +26,9 @@ jobs:
       - run:
           name: Linting
           command: |
-<<<<<<< HEAD
             yarn nx lint
-
 workflows:
   NX Workflow:
     jobs:
       - install_dependencies
-=======
             yarn nx lint
->>>>>>> 65caa2d99af48b299cb5aef407f4059c95b932a7
