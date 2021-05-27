@@ -2,11 +2,12 @@ version: 2.1
 
 jobs:
   install_dependencies:
-    working_directory: ~/repo
+    working_directory: ~/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
-      - checkout
+      - checkout:
+          path: ~/circleci-nx
       - run: node --version
       - run: pwd
       - run: cd ../
