@@ -1,10 +1,27 @@
 version: 2.1
 jobs:
-  quality-gates:
+  install_dependencies:
     docker:
-      - image: alpine:3.7
+      - image: cimg/node:16.2-browsers
     steps:
       - checkout
+      - run: node --version
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+  quality-gates:
+    docker:
+      - image: cimg/node:16.2-browsers
+    steps:
       - run:
           name: Linting
           command: |
@@ -15,7 +32,7 @@ jobs:
             yarn nx test
   build:
     docker:
-      - image: alpine:3.7
+      - image: cimg/node:16.2-browsers
     steps:
       - run:
           name: Building app
