@@ -8,6 +8,8 @@ jobs:
     steps:
       - checkout
       - run: node --version
+      - run: pwd
+      - run: cd ../
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
