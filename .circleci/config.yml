@@ -10,7 +10,7 @@ jobs:
           path: ~/circleci-nx
       - run: node --version
       - run: pwd
-      - run: cd ../
+      - run: cd ../ && ls
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
