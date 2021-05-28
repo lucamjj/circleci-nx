@@ -29,6 +29,7 @@ jobs:
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+      - run: yarn nx lint
   quality-gates:
     working_directory: ~/circleci-nx
     docker:
@@ -41,6 +42,7 @@ jobs:
           name: Restore Yarn Package Cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
+      - run: ls
       - run:
           name: Linting
           command: |
