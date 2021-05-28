@@ -1,19 +1,24 @@
 version: 2.1
 
 jobs:
-  install_dependencies:
+  checkout_code:
     working_directory: ~/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
       - checkout
-      - run: node --version
-      - run: pwd
-      - run: ls
+      - save_cache:
+          key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - ~/circleci-nx-cache-workflows
+  install_dependencies:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:16.2-browsers
+    steps:
       - restore_cache:
-          name: Restore Yarn Package Cache
           keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -27,8 +32,10 @@ jobs:
     docker:
       - image: cimg/node:16.2-browsers
     steps:
-      - checkout:
-          path: ~/circleci-nx
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run:
           name: Linting
           command: |
@@ -50,11 +57,13 @@ jobs:
 workflows:
   NX Workflow:
     jobs:
-      - install_dependencies
+      - checkout_code
+      - install_dependencies:
+          requires:
+            - checkout_code
       - quality-gates:
           requires:
             - install_dependencies
       - build:
           requires:
-            - install_dependencies
             - quality-gates

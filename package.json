@@ -23,7 +23,8 @@
     "update": "nx migrate latest",
     "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
-    "help": "nx help"
+    "help": "nx help",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -69,6 +70,7 @@
     "prettier": "2.2.1",
     "ts-jest": "26.5.5",
     "ts-node": "~9.1.1",
-    "typescript": "~4.2.4"
+    "typescript": "~4.2.4",
+    "husky": "^6.0.0"
   }
 }
