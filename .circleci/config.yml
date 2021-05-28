@@ -34,6 +34,13 @@ jobs:
     docker:
       - image: cimg/node:16.2-browsers
     steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run: pwd
       - run: ls
 
