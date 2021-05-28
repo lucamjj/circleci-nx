@@ -32,6 +32,7 @@ jobs:
     docker:
       - image: cimg/node:16.2-browsers
     steps:
+      - path: ~/circleci-nx
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
