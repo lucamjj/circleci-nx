@@ -19,6 +19,8 @@ jobs:
       - restore_cache:
           keys:
             - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - run: pwd
+      - run: ls
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -36,23 +38,8 @@ jobs:
           name: Restore Yarn Package Cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
-      - run:
-          name: Linting
-          command: |
-            yarn nx lint
-      - run:
-          name: Unit Tests
-          command: |
-            yarn nx test
-  build:
-    working_directory: ~/circleci-nx
-    docker:
-      - image: cimg/node:16.2-browsers
-    steps:
-      - run:
-          name: Building app
-          command: |
-            yarn nx build
+      - run: pwd
+      - run: ls
 
 workflows:
   NX Workflow:
@@ -64,6 +51,3 @@ workflows:
       - quality-gates:
           requires:
             - install_dependencies
-      - build:
-          requires:
-            - quality-gates
