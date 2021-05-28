@@ -10,7 +10,7 @@ jobs:
       - save_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
           paths:
-            - ~/circleci-nx-cache-workflows
+            - ~/circleci-nx
   install_dependencies:
     working_directory: ~/circleci-nx
     docker:
@@ -32,7 +32,6 @@ jobs:
     docker:
       - image: cimg/node:16.2-browsers
     steps:
-      - path: ~/circleci-nx
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
