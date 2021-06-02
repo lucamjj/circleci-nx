@@ -19,25 +19,21 @@ jobs:
       - restore_cache:
           keys:
             - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-      - run: pwd
-      - run: ls
       - run:
           name: Install Dependencies
-          command: yarn install
+          command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
-            - ./node_modules
+            - ~/.cache/yarn
+      - run: ls
       - run: yarn nx lint
   quality-gates:
     working_directory: ~/circleci-nx
     docker:
       - image: cimg/node:16.2-browsers
     steps:
-      - restore_cache:
-          keys:
-            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
