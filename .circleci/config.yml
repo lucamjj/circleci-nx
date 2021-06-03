@@ -10,21 +10,87 @@ jobs:
       - restore_cache:
           keys:
             - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
-      - restore_cache:
-          name: Restore Yarn Package Cache
-          keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
       - save_cache:
           key: v1-repo-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - ~/circleci-nx
+  install_dependencies:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:14.17
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
       - run: ls
-      - run: yarn nx run circleci-nx:build --maxWorkers=8
+      - run: yarn nx lint
+  quality-gates:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:14.17
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: ls
+      - run:
+          name: Linting
+          command: |
+            yarn nx lint
+      - run:
+          name: Unit Tests
+          command: |
+            yarn nx test
+  build:
+    working_directory: ~/circleci-nx
+    docker:
+      - image: cimg/node:14.17
+    steps:
+      - restore_cache:
+          keys:
+            - v1-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: yarn
+      - run: ls
+      - run:
+          name: Building app
+          command: |
+            yarn nx run circleci-nx:build --maxWorkers=8
+
 workflows:
   NX Workflow:
     jobs:
       - checkout_code
+      - install_dependencies:
+          requires:
+            - checkout_code
+      - quality-gates:
+          requires:
+            - install_dependencies
+      - build:
+          requires:
+            - quality-gates

@@ -25,6 +25,13 @@
     "circleci-nx-e2e": {
       "tags": [],
       "implicitDependencies": ["circleci-nx"]
+    },
+    "dashboard": {
+      "tags": []
+    },
+    "dashboard-e2e": {
+      "tags": [],
+      "implicitDependencies": ["dashboard"]
     }
   }
 }
