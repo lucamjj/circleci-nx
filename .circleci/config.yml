@@ -22,7 +22,7 @@ jobs:
           name: Install Dependencies
           command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
       - run: ls
-      - run: nx run circleci-nx:build --maxWorkers=8
+      - run: yarn nx run circleci-nx:build --maxWorkers=8
       - run: ls
 workflows:
   NX Workflow:
