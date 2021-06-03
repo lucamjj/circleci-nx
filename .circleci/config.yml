@@ -4,7 +4,7 @@ jobs:
   checkout_code:
     working_directory: ~/circleci-nx
     docker:
-      - image: cimg/node:16.2-browsers
+      - image: cimg/node:16.2
     steps:
       - checkout
       - restore_cache:
@@ -17,7 +17,7 @@ jobs:
   install_dependencies:
     working_directory: ~/circleci-nx
     docker:
-      - image: cimg/node:16.2-browsers
+      - image: cimg/node:16.2
     steps:
       - restore_cache:
           keys:
@@ -39,7 +39,7 @@ jobs:
   quality-gates:
     working_directory: ~/circleci-nx
     docker:
-      - image: cimg/node:16.2-browsers
+      - image: cimg/node:16.2
     steps:
       - restore_cache:
           keys:
@@ -63,7 +63,7 @@ jobs:
   build:
     working_directory: ~/circleci-nx
     docker:
-      - image: cimg/node:16.2-browsers
+      - image: cimg/node:16.2
     steps:
       - restore_cache:
           keys:
@@ -78,7 +78,7 @@ jobs:
       - run:
           name: Building app
           command: |
-            yarn nx build
+            yarn nx run circleci-nx:build --progress --verbose
 
 workflows:
   NX Workflow:
