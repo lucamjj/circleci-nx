@@ -1,0 +1,6 @@
+[build]
+  command = "yarn build:dashboard"
+  publish = "/dist/apps/dashboard"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
