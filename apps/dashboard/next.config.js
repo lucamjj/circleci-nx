@@ -7,5 +7,4 @@ module.exports = withNx({
     // See: https://github.com/gregberge/svgr
     svgr: true,
   },
-  distDir: 'dist/apps/dashboard/.next',
 });
