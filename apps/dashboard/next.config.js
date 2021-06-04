@@ -7,5 +7,6 @@ module.exports = withNx({
     // See: https://github.com/gregberge/svgr
     svgr: true,
     target: 'serverless',
+    distDir: 'dist/apps/dashboard/.next',
   },
 });
