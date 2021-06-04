@@ -11,6 +11,7 @@
     "e2e": "nx e2e",
     "build:circleci": "yarn nx build circleci-nx --maxWorkers=8",
     "build:dashboard": "yarn nx build dashboard --maxWorkers=8",
+    "export:dashboard": "yarn nx export dashboard",
     "affected:apps": "nx affected:apps",
     "affected:libs": "nx affected:libs",
     "affected:build": "nx affected:build",
