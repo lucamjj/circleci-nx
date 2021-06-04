@@ -6,6 +6,6 @@ module.exports = withNx({
     // Set this to false if you do not want to use SVGR
     // See: https://github.com/gregberge/svgr
     svgr: true,
-    target: 'serverless',
   },
+  target: 'serverless',
 });
