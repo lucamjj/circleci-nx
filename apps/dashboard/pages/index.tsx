@@ -2,7 +2,15 @@ import React from 'react';
 
 import styles from './index.module.css';
 
-export function Index() {
+export async function getServerSideProps(context) {
+  return {
+    props: {
+      appName: 'dashboard',
+    }, // will be passed to the page component as props
+  };
+}
+
+export function Index({ appName }) {
   /*
    * Replace the elements below with your own.
    *
@@ -10,7 +18,7 @@ export function Index() {
    */
   return (
     <div className={styles.page}>
-      <h2>I am dashboard</h2>
+      <h2>I am {appName}</h2>
     </div>
   );
 }
