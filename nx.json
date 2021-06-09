@@ -36,6 +36,9 @@
     "dashboard-e2e": {
       "tags": [],
       "implicitDependencies": ["dashboard"]
+    },
+    "api": {
+      "tags": []
     }
   }
 }
