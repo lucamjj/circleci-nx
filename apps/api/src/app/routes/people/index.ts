@@ -85,10 +85,10 @@ type contentData = {
 router.get('/', async (req, res) => {
   const data: contentData = await readContent();
   if (data) {
-    const people = Object.entries(data).map(([personId, personObj]) => {
+    const people = Object.entries(data).map(([personId, rest]) => {
       return {
         personId,
-        name: personObj.name,
+        ...rest,
       };
     });
 

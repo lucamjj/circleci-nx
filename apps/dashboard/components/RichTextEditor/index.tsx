@@ -15,12 +15,12 @@ import { ReactEditor } from 'slate-react';
 
 import { Icon, Toolbar, RichTextButton as Button } from './components';
 
-type CustomElement = {
+export type CustomElement = {
   type: 'paragraph' | 'block-quote';
   children: CustomText[];
 };
 
-type meetingNotesType = {
+export type meetingNotesType = {
   notes: CustomElement[];
 };
 
@@ -48,8 +48,8 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 
-const RichTextTemplate = () => {
-  const [richText, setRichText] = useState<Descendant[]>(null);
+const RichTextEditor = ({ personId, meetingId, content = null }) => {
+  const [richText, setRichText] = useState<Descendant[]>(content);
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
@@ -65,7 +65,7 @@ const RichTextTemplate = () => {
       currentSource = cancelToken.source();
       await axios
         .put(
-          'http://localhost:3333/api/people/write/1/3',
+          `http://localhost:3333/api/people/write/${personId}/${meetingId}`,
           { content: richText },
           {
             headers: {
@@ -90,39 +90,42 @@ const RichTextTemplate = () => {
     return () => {
       currentSource && currentSource.cancel('Axios: put request cancelled');
     };
-  }, [richText]);
+  }, [richText, personId, meetingId]);
 
-  React.useEffect(() => {
-    console.log('Read JSON');
+  // React.useEffect(() => {
+  //   console.log('Read JSON');
 
-    const cancelToken = axios.CancelToken;
-    const source = cancelToken.source();
+  //   const cancelToken = axios.CancelToken;
+  //   const source = cancelToken.source();
 
-    const getContent = async () => {
-      const content = await axios
-        .get<meetingNotesType>('http://localhost:3333/api/people/read/1/3', {
-          cancelToken: source.token,
-        })
-        .catch(function (thrown) {
-          if (axios.isCancel(thrown)) {
-            console.log('Request canceled', thrown.message);
-          } else {
-            setError({
-              error: 'It was not possible to fetch content for this meeting',
-            });
-          }
-        });
+  //   const getContent = async () => {
+  //     const content = await axios
+  //       .get<meetingNotesType>(
+  //         `http://localhost:3333/api/people/${personId}/${meetingId}`,
+  //         {
+  //           cancelToken: source.token,
+  //         }
+  //       )
+  //       .catch(function (thrown) {
+  //         if (axios.isCancel(thrown)) {
+  //           console.log('Request canceled', thrown.message);
+  //         } else {
+  //           setError({
+  //             error: 'It was not possible to fetch content for this meeting',
+  //           });
+  //         }
+  //       });
 
-      if (content && content.data.notes) {
-        setRichText(content.data.notes);
-      }
-    };
-    getContent();
+  //     if (content && content.data.notes) {
+  //       setRichText(content.data.notes);
+  //     }
+  //   };
+  //   getContent();
 
-    return () => {
-      source.cancel('Axios: put request cancelled');
-    };
-  }, []);
+  //   return () => {
+  //     source.cancel('Axios: put request cancelled');
+  //   };
+  // }, [personId, meetingId]);
 
   return richText ? (
     <Slate
@@ -327,4 +330,4 @@ const MarkButton = ({ format, icon }) => {
 //   },
 // ];
 
-export default RichTextTemplate;
+export default RichTextEditor;

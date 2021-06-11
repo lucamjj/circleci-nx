@@ -1,6 +1,6 @@
 import React, { Ref, PropsWithChildren } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Button } from '../../';
+import { Button } from '../..';
 import FormatBold from '@material-ui/icons/FormatBold';
 import FormatItalic from '@material-ui/icons/FormatItalic';
 import FormatUnderlined from '@material-ui/icons/FormatUnderlined';
