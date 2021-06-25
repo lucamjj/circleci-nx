@@ -38,6 +38,7 @@ export default function MeetingCard({
   personId,
   meetingId,
   meetingInfo: { title, date, questions, notes },
+  updateListOfMeetings,
 }) {
   const classes = useStyles();
 
@@ -68,7 +69,10 @@ export default function MeetingCard({
         subheader={`${formatZuluTime(date)}`}
       />
       <CardActions disableSpacing>
-        <IconButton aria-label="delete meeting">
+        <IconButton
+          aria-label="delete meeting"
+          onClick={() => updateListOfMeetings(meetingId)}
+        >
           <Delete color={'primary'} />
         </IconButton>
         <IconButton

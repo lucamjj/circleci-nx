@@ -1,7 +1,7 @@
 import axios, { Method } from 'axios';
 import React, { useState } from 'react';
 
-const UsePostData = ({ url = null, headers = null }) => {
+const UsePostData = () => {
   let currentSource = null;
   const [data, setData] = useState(null);
   const [isInProgress, setIsInProgress] = useState(true);
@@ -11,7 +11,7 @@ const UsePostData = ({ url = null, headers = null }) => {
     currentSource && currentSource.cancel('Axios: put request cancelled');
   };
 
-  const POST = async (content) => {
+  const POST = async ({ url = null, headers = null, content = null }) => {
     console.log('POST to API');
     const cancelToken = axios.CancelToken;
     currentSource = cancelToken.source();
@@ -40,7 +40,39 @@ const UsePostData = ({ url = null, headers = null }) => {
       .finally(() => setIsInProgress(false));
   };
 
-  return { data, isInProgress, error, API: { POST }, cancelRequest };
+  const DELETE = async ({ url = null, headers = null, content = null }) => {
+    console.log(`(UsePostData) Delete element ${content} in API`);
+    const cancelToken = axios.CancelToken;
+    currentSource = cancelToken.source();
+    const config = {
+      url,
+      method: 'delete' as Method,
+      data: content,
+      headers: headers || {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cancelToken: currentSource.token,
+      },
+    };
+    try {
+      const res = await axios(config);
+      setData(res);
+      return res;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log('Request canceled', error.message);
+      } else {
+        const errorMsg = {
+          error: 'It was not possible to delete the content',
+        };
+        setError(errorMsg);
+        return errorMsg;
+      }
+    }
+  };
+
+  return { data, isInProgress, error, API: { POST, DELETE }, cancelRequest };
 };
 
 export default UsePostData;

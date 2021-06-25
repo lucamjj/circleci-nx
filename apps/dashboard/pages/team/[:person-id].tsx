@@ -1,5 +1,5 @@
 import React from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 import { makeStyles } from '@material-ui/core/styles';
 import MeetingCard from '../../components/MeetingCard';
 import { useRouter } from 'next/router';
@@ -12,7 +12,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Paper,
-  TableHead,
   Typography,
 } from '@material-ui/core';
 import { Grid } from '@material-ui/core';
@@ -22,8 +21,9 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
-import TableFooter from '@material-ui/core/TableFooter';
 import TableRow from '@material-ui/core/TableRow';
+import UsePostData from '../../utils/UsePostData';
+import { AxiosResponse } from 'axios';
 
 const useStyles = makeStyles((theme) => ({
   avatar: {
@@ -47,6 +47,54 @@ const PersonPage = () => {
   const classes = useStyles();
   const [expanded, setExpanded] = React.useState<string | false>(false);
 
+  const { data, error } = useSWR(
+    `http://localhost:3333/api/people/${personId}`
+  );
+
+  const { data: deleteStatus, API } = UsePostData();
+
+  const calculateMeetingsData = React.useCallback(
+    (meetings) =>
+      Object.entries(meetings).reduce((prev, [meetingId, meetingInfo]) => {
+        return [
+          ...prev,
+          {
+            personId,
+            meetingId,
+            meetingInfo,
+          },
+        ];
+      }, []),
+    [personId]
+  );
+
+  const updateListOfMeetings = async (meetingId) => {
+    const newData = { ...data };
+
+    delete newData['meetings'][meetingId];
+
+    const res = (await API.DELETE({
+      url: `http://localhost:3333/api/people/${personId}/meetings/${meetingId}`,
+      content: { personId, meetingId },
+    })) as AxiosResponse;
+
+    if (res && res.status && res.status === 200) {
+      mutate(
+        `http://localhost:3333/api/people/${personId}`,
+        {
+          ...data,
+          ...newData,
+        },
+        false
+      );
+    } else if (res && res.status !== 200) {
+      console.log("Delete didn't work, sorry");
+    }
+  };
+
+  if (error) return <div>failed to load person</div>;
+  if (!data) return <div>loading person info...</div>;
+
   const handleChange = (panel: string) => (
     event: React.ChangeEvent,
     isExpanded: boolean
@@ -54,28 +102,7 @@ const PersonPage = () => {
     setExpanded(isExpanded ? panel : false);
   };
 
-  const { data, error } = useSWR(
-    `http://localhost:3333/api/people/${personId}`
-  );
-  if (error) return <div>failed to load person</div>;
-  if (!data) return <div>loading person info...</div>;
-
-  const { bio, notes, meetings } = data;
-  const meetingsData = Object.entries(meetings).reduce(
-    (prev, [meetingId, meetingInfo]) => {
-      return [
-        ...prev,
-        {
-          personId,
-          meetingId,
-          meetingInfo,
-        },
-      ];
-    },
-    []
-  );
-
-  console.log(meetingsData);
+  const { bio, notes } = data;
 
   return (
     <>
@@ -94,8 +121,13 @@ const PersonPage = () => {
             </Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography variant={'body1'} component={'p'}>
+            <Typography variant={'body2'} component={'p'} paragraph>
               Joined the company on: {bio.joinDate}
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant={'body1'} component={'p'}>
+              Role: {bio.role}
             </Typography>
           </Grid>
         </Grid>
@@ -186,7 +218,7 @@ const PersonPage = () => {
                   className={classes.actionButton}
                   startIcon={<Add />}
                   href={{
-                    pathname: `/meeting/new`,
+                    pathname: `/team/${personId}/meetings/new`,
                     query: {
                       id: personId,
                     },
@@ -204,8 +236,9 @@ const PersonPage = () => {
               >
                 <GridCards
                   cardComponent={MeetingCard as React.FC}
-                  data={meetingsData}
+                  data={calculateMeetingsData(data.meetings)}
                   cols={2}
+                  updateListOfMeetings={updateListOfMeetings}
                 />
               </Grid>
             </Grid>

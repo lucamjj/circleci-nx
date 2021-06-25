@@ -157,6 +157,28 @@ router.get('/:personId/meetings/:meetingId', async (req, res) => {
   res.sendStatus(412);
 });
 
+router.delete('/:personId/meetings/:meetingId', async (req, res) => {
+  // const { personId, meetingId } = req.params;
+  console.log(req.body);
+  console.log(req.params);
+
+  const { personId, meetingId } = req.body;
+
+  const data = await getPeople();
+  if (data) {
+    const newData = { ...data };
+    delete newData[personId]['meetings'][meetingId];
+    storeData(
+      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
+      newData
+    );
+    res.sendStatus(200);
+    return;
+  }
+
+  res.sendStatus(412);
+});
+
 router.get('/:personId/meetings', async (req, res) => {
   const { personId } = req.params;
 
@@ -172,9 +194,10 @@ router.get('/:personId/meetings', async (req, res) => {
 });
 
 router.post('/:personId/meetings', async (req, res) => {
-  const {
-    content: { title, date, template },
-  } = req.body;
+  const { title, date, template } = req.body;
+
+  console.log(req.body);
+
   const { personId } = req.params;
   const data = await getPeople();
   const questions = await getQuestions();
