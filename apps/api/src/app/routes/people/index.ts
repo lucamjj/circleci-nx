@@ -1,5 +1,7 @@
+import questionsFromTemplate from '../../../utils/questionsFromTemplate';
 import { Router } from 'express';
 import fsExtra = require('fs-extra');
+import { getPeople, getQuestions } from '../../../utils/readContent';
 
 export const router = Router();
 
@@ -82,8 +84,18 @@ type contentData = {
   };
 };
 
+async function storeData(filePath, content) {
+  try {
+    await fsExtra.outputJson(filePath, content);
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
 router.get('/', async (req, res) => {
-  const data: contentData = await readContent();
+  const data: contentData = await getPeople();
   if (data) {
     const people = Object.entries(data).map(([personId, rest]) => {
       return {
@@ -102,10 +114,8 @@ router.get('/', async (req, res) => {
 router.get('/:personId', async (req, res) => {
   const { personId } = req.params;
 
-  const data = await readContent();
+  const data = await getPeople();
   if (data) {
-    console.log(data);
-
     const person = data[personId];
 
     res.send(person).status(200);
@@ -115,13 +125,29 @@ router.get('/:personId', async (req, res) => {
   res.send({ error: true, msg: 'no json to read' }).sendStatus(200);
 });
 
-router.get('/read/:personId/:meetingId', async (req, res) => {
+router.put('/:personId', async (req, res) => {
+  const { personId } = req.params;
+  const { content } = req.body;
+
+  const data = await getPeople();
+  if (data) {
+    data[personId]['notes'] = content;
+    storeData(
+      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
+      data
+    );
+    res.sendStatus(200);
+    return;
+  }
+
+  res.sendStatus(412);
+});
+
+router.get('/:personId/meetings/:meetingId', async (req, res) => {
   const { personId, meetingId } = req.params;
 
-  const data = await readContent();
+  const data = await getPeople();
   if (data) {
-    console.log(data);
-
     const meeting = data[personId]['meetings'][meetingId];
 
     res.send(meeting);
@@ -131,48 +157,71 @@ router.get('/read/:personId/:meetingId', async (req, res) => {
   res.sendStatus(412);
 });
 
-async function readContent() {
-  try {
-    return await fsExtra.readJson(
-      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`
-    );
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
+router.get('/:personId/meetings', async (req, res) => {
+  const { personId } = req.params;
 
-async function storeData(filePath, content) {
-  try {
-    await fsExtra.outputJson(filePath, content);
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-}
-
-router.put('/write/:personId/:meetingId', async (req, res) => {
-  const { content } = req.body;
-  const { personId, meetingId } = req.params;
-  console.log(
-    `%c${personId} ${meetingId}`,
-    `color: green; background-color: black`
-  );
-  console.log(`%c${content}`, `color: green; background-color: red`);
-  const data = await readContent();
+  const data = await getPeople();
   if (data) {
-    console.log(data);
-
     const meetings = data[personId]['meetings'];
+
+    res.send(meetings);
+    return;
+  }
+
+  res.sendStatus(412);
+});
+
+router.post('/:personId/meetings', async (req, res) => {
+  const {
+    content: { title, date, template },
+  } = req.body;
+  const { personId } = req.params;
+  const data = await getPeople();
+  const questions = await getQuestions();
+
+  if (data) {
+    const meetings = data[personId]['meetings'];
+    const numOfMeetings = Object.entries(meetings).length;
     const newMeetings = {
       ...meetings,
-      [meetingId]: {
-        date: new Date(),
-        notes: content,
+      [numOfMeetings + 1]: {
+        title,
+        date,
+        template,
+        questions: questionsFromTemplate(questions, template),
+        notes: [{ type: 'paragraph', children: [{ text: '' }] }],
       },
     };
     data[personId]['meetings'] = newMeetings;
+    storeData(
+      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
+      data
+    );
+    res.sendStatus(200);
+    return;
+  }
+
+  res.sendStatus(412);
+});
+
+router.put('/:personId/meetings/:meetingId', async (req, res) => {
+  const { content } = req.body;
+  const { personId, meetingId } = req.params;
+
+  const data = await getPeople();
+
+  if (data) {
+    const meetings = data[personId]['meetings'];
+    const oldMeeting = data[personId]['meetings'][meetingId];
+    const newMeeting = {
+      ...meetings,
+      [meetingId]: {
+        ...oldMeeting,
+        notes: content,
+      },
+    };
+    data[personId]['meetings'] = newMeeting;
+
     storeData(
       `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
       data

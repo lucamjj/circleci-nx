@@ -7,15 +7,17 @@ import CardActions from '@material-ui/core/CardActions';
 import Collapse from '@material-ui/core/Collapse';
 import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
-import FavoriteIcon from '@material-ui/icons/Favorite';
+import Delete from '@material-ui/icons/Delete';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import { deepOrange } from '@material-ui/core/colors';
 import RichTextEditor from '../RichTextEditor';
+import formatZuluTime from '../../utils/formatZuluDate';
+import { ButtonLink } from '..';
+import Typography from '@material-ui/core/Typography';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    maxWidth: 345,
+    margin: '20px 0',
   },
   expand: {
     transform: 'rotate(0deg)',
@@ -28,22 +30,18 @@ const useStyles = makeStyles((theme) => ({
     transform: 'rotate(180deg)',
   },
   avatar: {
-    orange: {
-      color: theme.palette.getContrastText(deepOrange[500]),
-      backgroundColor: deepOrange[500],
-    },
+    backgroundColor: theme.palette.warning.main,
   },
 }));
 
 export default function MeetingCard({
   personId,
   meetingId,
-  meetingInfo: { date, notes },
+  meetingInfo: { title, date, questions, notes },
 }) {
   const classes = useStyles();
 
   const [expanded, setExpanded] = React.useState(false);
-
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
@@ -57,12 +55,21 @@ export default function MeetingCard({
             <MoreVertIcon />
           </IconButton>
         }
-        title={'Meeting title'}
-        subheader={`Date: ${date}`}
+        title={
+          <ButtonLink
+            href={`${personId}/meetings/${meetingId}`}
+            style={{ padding: '0' }}
+          >
+            <Typography variant={'body1'}>
+              {title || 'Ops, no title here!'}
+            </Typography>
+          </ButtonLink>
+        }
+        subheader={`${formatZuluTime(date)}`}
       />
       <CardActions disableSpacing>
-        <IconButton aria-label="add to favorites">
-          <FavoriteIcon />
+        <IconButton aria-label="delete meeting">
+          <Delete color={'primary'} />
         </IconButton>
         <IconButton
           className={clsx(classes.expand, {
@@ -77,8 +84,7 @@ export default function MeetingCard({
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <RichTextEditor
-          personId={personId}
-          meetingId={meetingId}
+          origin={`http://localhost:3333/api/people/${personId}/meetings/${meetingId}`}
           content={notes}
         />
       </Collapse>

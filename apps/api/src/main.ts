@@ -11,16 +11,7 @@ import * as swaggerJSDoc from 'swagger-jsdoc';
 import * as path from 'path';
 import * as cors from 'cors';
 import router from '../src/app/routes';
-const { questions, people } = router;
-
-// import { getMapOf } from '@mono-nx-test-with-nextjs/api/utils';
-// import data from '@mono-nx-test-with-nextjs/api/assets'; // The API data
-// import {
-//   FACETS_ROUTE,
-//   DIRECTORS_ROUTE,
-//   MOVIES_ROUTE,
-//   ACTORS_ROUTE,
-// } from '@mono-nx-test-with-nextjs/api/constants';
+const { questions, people, templates } = router;
 
 const options = {
   definition: {
@@ -79,6 +70,7 @@ app.get('/swagger.json', function (req, res) {
 // Routes
 app.use(people.path, people.route);
 app.use(questions.path, questions.route);
+app.use(templates.path, templates.route);
 
 const port = process.env.port || 3333;
 const server = app.listen(port, () => {

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import isHotkey from 'is-hotkey';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { Editable, withReact, useSlate, Slate } from 'slate-react';
 import {
   Editor,
@@ -12,6 +12,7 @@ import {
 import { withHistory } from 'slate-history';
 import { BaseEditor } from 'slate';
 import { ReactEditor } from 'slate-react';
+import useSWR from 'swr';
 
 import { Icon, Toolbar, RichTextButton as Button } from './components';
 
@@ -48,24 +49,34 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 
-const RichTextEditor = ({ personId, meetingId, content = null }) => {
+const RichTextEditor = ({
+  origin,
+  content = null,
+  readOnly = false,
+}: {
+  origin?: string;
+  content?: null | Descendant[];
+  readOnly?: boolean;
+}) => {
   const [richText, setRichText] = useState<Descendant[]>(content);
   const renderElement = useCallback((props) => <Element {...props} />, []);
   const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const refFirstRender = React.useRef({ firstRender: true });
   const [addContentError, setAddContentError] = useState(null);
-  const [error, setError] = useState(null);
+  const { data: notesToDisplay, error } = useSWR(content ? null : origin);
 
   React.useEffect(() => {
     let currentSource = null;
     const addNewContent = async () => {
       console.log('Write to JSON');
+      console.log('RichText', richText);
+
       const cancelToken = axios.CancelToken;
       currentSource = cancelToken.source();
       await axios
         .put(
-          `http://localhost:3333/api/people/write/${personId}/${meetingId}`,
+          origin,
           { content: richText },
           {
             headers: {
@@ -90,48 +101,17 @@ const RichTextEditor = ({ personId, meetingId, content = null }) => {
     return () => {
       currentSource && currentSource.cancel('Axios: put request cancelled');
     };
-  }, [richText, personId, meetingId]);
+  }, [richText, origin]);
 
-  // React.useEffect(() => {
-  //   console.log('Read JSON');
+  if (error) return <div>failed to load notes</div>;
+  if (!content && !notesToDisplay) return <div>loading notes...</div>;
 
-  //   const cancelToken = axios.CancelToken;
-  //   const source = cancelToken.source();
-
-  //   const getContent = async () => {
-  //     const content = await axios
-  //       .get<meetingNotesType>(
-  //         `http://localhost:3333/api/people/${personId}/${meetingId}`,
-  //         {
-  //           cancelToken: source.token,
-  //         }
-  //       )
-  //       .catch(function (thrown) {
-  //         if (axios.isCancel(thrown)) {
-  //           console.log('Request canceled', thrown.message);
-  //         } else {
-  //           setError({
-  //             error: 'It was not possible to fetch content for this meeting',
-  //           });
-  //         }
-  //       });
-
-  //     if (content && content.data.notes) {
-  //       setRichText(content.data.notes);
-  //     }
-  //   };
-  //   getContent();
-
-  //   return () => {
-  //     source.cancel('Axios: put request cancelled');
-  //   };
-  // }, [personId, meetingId]);
-
-  return richText ? (
+  return richText || notesToDisplay ? (
     <Slate
       editor={editor}
       value={
-        richText || [
+        richText ||
+        notesToDisplay.notes || [
           {
             type: 'paragraph',
             children: [{ text: '' }],
@@ -139,26 +119,33 @@ const RichTextEditor = ({ personId, meetingId, content = null }) => {
         ]
       }
       onChange={(value) => {
-        setRichText(value);
+        if (refFirstRender.current.firstRender === false) {
+          setRichText(value);
+        }
         refFirstRender.current.firstRender = false;
       }}
     >
-      <Toolbar
-        style={{
-          backgroundColor: 'white',
-        }}
-      >
-        <MarkButton format="bold" icon="formatBold" />
-        <MarkButton format="italic" icon="formatItalic" />
-        <MarkButton format="underline" icon="formatUnderlined" />
-        <MarkButton format="code" icon="code" />
-        <BlockButton format="heading-one" icon="looksOne" />
-        <BlockButton format="heading-two" icon="looksTwo" />
-        <BlockButton format="block-quote" icon="formatCode" />
-        <BlockButton format="numbered-list" icon="formatListNumbered" />
-        <BlockButton format="bulleted-list" icon="formatListBulleted" />
-      </Toolbar>
+      {!readOnly && (
+        <Toolbar
+          style={{
+            backgroundColor: 'white',
+          }}
+        >
+          <MarkButton format="bold" icon="formatBold" />
+          <MarkButton format="italic" icon="formatItalic" />
+          <MarkButton format="underline" icon="formatUnderlined" />
+          <MarkButton format="code" icon="code" />
+          <BlockButton format="heading-one" icon="looksOne" />
+          <BlockButton format="heading-two" icon="looksTwo" />
+          <BlockButton format="block-quote" icon="formatCode" />
+          <BlockButton format="numbered-list" icon="formatListNumbered" />
+          <BlockButton format="bulleted-list" icon="formatListBulleted" />
+        </Toolbar>
+      )}
       <Editable
+        // style={{
+        //   margin: '-16px -20px',
+        // }}
         renderElement={renderElement}
         renderLeaf={renderLeaf}
         placeholder="Enter some rich text…"
@@ -173,9 +160,12 @@ const RichTextEditor = ({ personId, meetingId, content = null }) => {
             }
           }
         }}
+        readOnly={readOnly}
       />
     </Slate>
-  ) : null;
+  ) : (
+    <p>No notes fetched</p>
+  );
 };
 
 const toggleBlock = (editor, format) => {
@@ -292,42 +282,5 @@ const MarkButton = ({ format, icon }) => {
     </Button>
   );
 };
-
-// const initialValue: Descendant[] = [
-//   {
-//     type: 'paragraph',
-//     children: [
-//       { text: 'This is editable ' },
-//       { text: 'rich', bold: true },
-//       { text: ' text, ' },
-//       { text: 'much', italic: true },
-//       { text: ' better than a ' },
-//       { text: '<textarea>', code: true },
-//       { text: '!' },
-//     ],
-//   },
-//   {
-//     type: 'paragraph',
-//     children: [
-//       {
-//         text:
-//           "Since it's rich text, you can do things like turn a selection of text ",
-//       },
-//       { text: 'bold', bold: true },
-//       {
-//         text:
-//           ', or add a semantically rendered block quote in the middle of the page, like this:',
-//       },
-//     ],
-//   },
-//   {
-//     type: 'block-quote',
-//     children: [{ text: 'A wise quote.' }],
-//   },
-//   {
-//     type: 'paragraph',
-//     children: [{ text: 'Try it out for yourself!' }],
-//   },
-// ];
 
 export default RichTextEditor;

@@ -9,16 +9,21 @@ import Collapse from '@material-ui/core/Collapse';
 import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import ShareIcon from '@material-ui/icons/Share';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import Link from 'next/link';
+import RichTextEditor from '../RichTextEditor';
+import { Descendant } from 'slate';
+import { ButtonLink } from '..';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    maxWidth: 345,
+    margin: '20px 0',
+  },
+  avatar: {
+    width: '80px',
+    height: '80px',
   },
   expand: {
     transform: 'rotate(0deg)',
@@ -32,20 +37,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface IntPersonCard {
-  personId: string;
+type PersonCardType = {
+  personId?: string;
   bio: {
     name: string;
     linkedin: string;
     pic: string;
     joinDate: string;
   };
-}
+  notes: Descendant[];
+};
 
 export default function PersonCard({
   personId,
   bio: { name, linkedin, pic, joinDate },
-}: IntPersonCard) {
+  notes,
+}: PersonCardType) {
   const classes = useStyles();
   const [expanded, setExpanded] = React.useState(false);
 
@@ -56,32 +63,39 @@ export default function PersonCard({
   return (
     <Card className={classes.root}>
       <CardHeader
-        avatar={<Avatar alt={`picture of ${name}`} src={pic} />}
+        avatar={
+          <Avatar
+            alt={`picture of ${name}`}
+            src={pic}
+            className={classes.avatar}
+          />
+        }
         action={
           <IconButton aria-label="settings">
-            <MoreVertIcon />
+            <MoreVertIcon color={'primary'} />
           </IconButton>
         }
         title={
-          <Link
-            href={{
-              pathname: `/team/${name}`,
-              query: {
-                id: personId,
-              },
-            }}
-          >
-            {name}
-          </Link>
+          <ButtonLink href={`/team/${personId}`} style={{ padding: '0' }}>
+            <Typography variant={'h6'}>{name}</Typography>
+          </ButtonLink>
         }
-        subheader={`Joined: ${joinDate}`}
+        subheader={
+          <>
+            <Typography
+              variant={'body2'}
+              paragraph
+            >{`Joined: ${joinDate}`}</Typography>
+            <Typography variant={'h6'}>{`Software Developer`}</Typography>
+          </>
+        }
       />
       <CardActions disableSpacing>
         <IconButton aria-label="add to favorites">
-          <FavoriteIcon />
+          <FavoriteIcon color={'secondary'} />
         </IconButton>
         <IconButton aria-label="linkedin" href={linkedin}>
-          <ShareIcon />
+          <ShareIcon color={'primary'} />
         </IconButton>
         <IconButton
           className={clsx(classes.expand, {
@@ -90,14 +104,14 @@ export default function PersonCard({
           onClick={handleExpandClick}
           aria-expanded={expanded}
           aria-label="show more"
+          color={'primary'}
         >
           <ExpandMoreIcon />
         </IconButton>
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent>
-          <Typography paragraph>Notes:</Typography>
-          <Typography>Some notes...</Typography>
+          <RichTextEditor content={notes} readOnly />
         </CardContent>
       </Collapse>
     </Card>

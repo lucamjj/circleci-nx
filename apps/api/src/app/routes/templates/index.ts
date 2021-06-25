@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getQuestions } from '../../../utils/readContent';
-import questionsFromTemplate from '../../../utils/questionsFromTemplate';
+import { getTemplates } from '../../../utils/readContent';
+import { templatesType } from '@types';
 
 export const router = Router();
 
@@ -8,7 +8,7 @@ export const router = Router();
  * @swagger
  *  components:
  *    schemas:
- *      Questions:
+ *      Templates:
  *        type: object
  *        properties:
  *          count:
@@ -46,37 +46,29 @@ export const router = Router();
 
 /**
  * @swagger
- * name: Questions
+ * name: Templates
  * path:
- *  /api/questions/:
+ *  /api/templates/:
  *    get:
- *      summary: Get list of all questions
- *      tags: [Questions]
+ *      summary: Get list of all templates
+ *      tags: [Templates]
  *      responses:
  *        "200":
- *          description: Questions schema
+ *          description: Templates schema
  *          content:
  *            application/json:
  *              schema:
  *                $ref: '#/components/schemas/Actors&Directors'
  */
 router.get('/', async (req, res) => {
-  const listOfQuestions = await getQuestions();
-  const questions = {
-    questions: {
-      count: Object.values(listOfQuestions).length,
-      data: listOfQuestions,
-    },
-  };
-  res.send(questions);
+  const data: templatesType = await getTemplates();
+  if (data) {
+    res.send(data).status(200);
+    return;
+  }
+
+  res.send({ error: true, msg: 'no json to read' }).sendStatus(200);
 });
 
-router.get('/:questionId', async (req, res) => {
-  const { questionId } = req.params;
-  const questions = await getQuestions();
-  const listOfQuestions = questionsFromTemplate(questions, questionId);
-  res.send(listOfQuestions);
-});
-
-export const QUESTIONS_ROUTE = '/api/questions';
+export const TEMPLATES_ROUTE = '/api/templates';
 export default router;

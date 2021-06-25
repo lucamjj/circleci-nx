@@ -45,10 +45,6 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: '15px',
     },
   },
-  icon: {
-    fontSize: '18px',
-    verticalAlign: 'text-bottom',
-  },
 }));
 
 interface BaseProps {

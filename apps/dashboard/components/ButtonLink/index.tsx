@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import NextLink from 'next/link';
+import NextLink, { LinkProps } from 'next/link';
 import { Button, ButtonProps } from '..';
 
 const Link = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
@@ -11,7 +11,9 @@ const Link = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
   );
 });
 
-export const ButtonLink = (props: ButtonProps) => {
+export const ButtonLink = (
+  props: ButtonProps | React.PropsWithChildren<LinkProps>
+) => {
   const { children, href, ...rest } = props;
   return (
     <NextLink href={href} passHref>

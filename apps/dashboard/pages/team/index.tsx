@@ -19,7 +19,7 @@ const Team = () => {
 
   return (
     <div className={classes.root}>
-      <GridCards cardComponent={PersonCard} data={data} />
+      <GridCards cardComponent={PersonCard as React.FC} data={data} cols={2} />
     </div>
   );
 };

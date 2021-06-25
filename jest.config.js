@@ -3,5 +3,6 @@ module.exports = {
     '<rootDir>/apps/circleci-nx',
     '<rootDir>/apps/dashboard',
     '<rootDir>/apps/api',
+    '<rootDir>/libs/types',
   ],
 };

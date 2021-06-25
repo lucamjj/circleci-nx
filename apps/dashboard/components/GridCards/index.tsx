@@ -1,8 +1,8 @@
 import React from 'react';
-import Grid from '@material-ui/core/Grid';
+import Grid, { GridSize } from '@material-ui/core/Grid';
 
-const getCards = (cardComponent, data) => {
-  const rowsNumber = data.length / 3;
+const getCards = (cardComponent, data, cols) => {
+  const rowsNumber = data.length / cols;
 
   const newArray = [...data];
 
@@ -13,11 +13,11 @@ const getCards = (cardComponent, data) => {
       container
       item
       xs={12}
-      spacing={3}
+      spacing={6}
       key={Math.random() + newArray.length}
     >
-      {newArray.splice(0, 3).map((props, index) => (
-        <Grid item xs={4} key={index}>
+      {newArray.splice(0, cols).map((props, index) => (
+        <Grid item xs={12} sm={(12 / cols) as GridSize} key={index}>
           <Card {...props} />
         </Grid>
       ))}
@@ -25,10 +25,18 @@ const getCards = (cardComponent, data) => {
   ));
 };
 
-const GridCards = ({ cardComponent, data }) => {
+const GridCards = ({
+  cardComponent,
+  data,
+  cols,
+}: {
+  cardComponent: React.FC;
+  data: unknown;
+  cols: GridSize;
+}) => {
   return (
     <Grid container spacing={1}>
-      {getCards(cardComponent, data)}
+      {getCards(cardComponent, data, cols)}
     </Grid>
   );
 };

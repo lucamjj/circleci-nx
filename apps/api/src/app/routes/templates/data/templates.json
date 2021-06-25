@@ -1,0 +1,34 @@
+{
+  "1": {
+    "title": "First 1:1 Meeting with a New Employee",
+    "frequency": {
+      "numOfWeeks": "1",
+      "repeat": false,
+      "text": "Once"
+    }
+  },
+  "2": {
+    "title": "1:1 Weekly",
+    "frequency": {
+      "numOfWeeks": "1",
+      "repeat": true,
+      "text": "Weekly"
+    }
+  },
+  "3": {
+    "title": "1:1 Monthly",
+    "frequency": {
+      "numOfWeeks": "4",
+      "repeat": true,
+      "text": "Monthly"
+    }
+  },
+  "4": {
+    "title": "Free style",
+    "frequency": {
+      "numOfWeeks": "0",
+      "repeat": false,
+      "text": "custom"
+    }
+  }
+}
