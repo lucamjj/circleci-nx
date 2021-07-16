@@ -15,6 +15,7 @@ import { ReactEditor } from 'slate-react';
 import useSWR from 'swr';
 
 import { Icon, Toolbar, RichTextButton as Button } from './components';
+import { Checkbox, FormControlLabel, FormGroup } from '@material-ui/core';
 
 export type CustomElement = {
   type: 'paragraph' | 'block-quote';
@@ -218,14 +219,23 @@ const Element = ({ attributes, children, element }) => {
   switch (element.type) {
     case 'block-quote':
       return <blockquote {...attributes}>{children}</blockquote>;
-    case 'bulleted-list':
+    case '-bulleted-list':
       return <ul {...attributes}>{children}</ul>;
+    case 'bulleted-list':
+      return <FormGroup {...attributes}>{children}</FormGroup>;
     case 'heading-one':
       return <h1 {...attributes}>{children}</h1>;
     case 'heading-two':
       return <h2 {...attributes}>{children}</h2>;
-    case 'list-item':
+    case '-list-item':
       return <li {...attributes}>{children}</li>;
+    case 'list-item':
+      return (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Checkbox color="primary" {...attributes} />
+          <span>{children}</span>
+        </div>
+      );
     case 'numbered-list':
       return <ol {...attributes}>{children}</ol>;
     default:

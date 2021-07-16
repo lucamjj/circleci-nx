@@ -22,7 +22,7 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableRow from '@material-ui/core/TableRow';
-import UsePostData from '../../utils/UsePostData';
+import { UsePostData } from '@hooks';
 import { AxiosResponse } from 'axios';
 
 const useStyles = makeStyles((theme) => ({
@@ -163,6 +163,22 @@ const PersonPage = () => {
               </Table>
             </TableContainer>
           </AccordionDetails>
+        </Accordion>
+        <Accordion
+          expanded={expanded === 'panelOnboarding'}
+          onChange={handleChange('panelOnboarding')}
+          className={classes.accordion}
+        >
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel3bh-content"
+            id="panel3bh-header"
+          >
+            <Typography variant={'h6'} component={'h2'}>
+              Onboarding
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>Add things</AccordionDetails>
         </Accordion>
         <Accordion
           expanded={expanded === 'panelNotes'}

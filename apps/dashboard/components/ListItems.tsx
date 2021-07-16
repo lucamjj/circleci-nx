@@ -46,5 +46,57 @@ export const mainListItems = (
         <ListItemText primary="Git" />
       </ButtonLink>
     </ListItem>
+    <ListItem>
+      <ButtonLink
+        href={'/okr'}
+        style={{
+          width: '100%',
+        }}
+      >
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="OKR" />
+      </ButtonLink>
+    </ListItem>
+    <ListItem>
+      <ButtonLink
+        href={'/onboarding'}
+        style={{
+          width: '100%',
+        }}
+      >
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="Onboarding" />
+      </ButtonLink>
+    </ListItem>
+    <ListItem>
+      <ButtonLink
+        href={'/hiring'}
+        style={{
+          width: '100%',
+        }}
+      >
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="Hiring" />
+      </ButtonLink>
+    </ListItem>
+    <ListItem>
+      <ButtonLink
+        href={'/settings'}
+        style={{
+          width: '100%',
+        }}
+      >
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="Settings" />
+      </ButtonLink>
+    </ListItem>
   </div>
 );

@@ -1,7 +1,6 @@
-import questionsFromTemplate from '../../../utils/questionsFromTemplate';
 import { Router } from 'express';
-import fsExtra = require('fs-extra');
-import { getPeople, getQuestions } from '../../../utils/readContent';
+import { getPeople, getTemplates } from '../../../utils/readContent';
+import { writeMeeting, writePerson } from '../../../utils/writeContent';
 
 export const router = Router();
 
@@ -84,16 +83,6 @@ type contentData = {
   };
 };
 
-async function storeData(filePath, content) {
-  try {
-    await fsExtra.outputJson(filePath, content);
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-}
-
 router.get('/', async (req, res) => {
   const data: contentData = await getPeople();
   if (data) {
@@ -132,10 +121,7 @@ router.put('/:personId', async (req, res) => {
   const data = await getPeople();
   if (data) {
     data[personId]['notes'] = content;
-    storeData(
-      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
-      data
-    );
+    writePerson(data);
     res.sendStatus(200);
     return;
   }
@@ -147,8 +133,8 @@ router.get('/:personId/meetings/:meetingId', async (req, res) => {
   const { personId, meetingId } = req.params;
 
   const data = await getPeople();
-  if (data) {
-    const meeting = data[personId]['meetings'][meetingId];
+  if (data && personId && meetingId) {
+    const meeting = data?.[personId]?.['meetings']?.[meetingId];
 
     res.send(meeting);
     return;
@@ -168,10 +154,7 @@ router.delete('/:personId/meetings/:meetingId', async (req, res) => {
   if (data) {
     const newData = { ...data };
     delete newData[personId]['meetings'][meetingId];
-    storeData(
-      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
-      newData
-    );
+    writeMeeting(newData);
     res.sendStatus(200);
     return;
   }
@@ -194,32 +177,66 @@ router.get('/:personId/meetings', async (req, res) => {
 });
 
 router.post('/:personId/meetings', async (req, res) => {
-  const { title, date, template } = req.body;
-
-  console.log(req.body);
+  const { title, date, template, questions } = req.body;
 
   const { personId } = req.params;
   const data = await getPeople();
-  const questions = await getQuestions();
+  const templates = await getTemplates();
+  const templateTitle = templates[template]?.text;
+  const templateFrequency = templates[template]?.frequency?.text;
 
   if (data) {
     const meetings = data[personId]['meetings'];
     const numOfMeetings = Object.entries(meetings).length;
+
     const newMeetings = {
       ...meetings,
       [numOfMeetings + 1]: {
         title,
         date,
         template,
-        questions: questionsFromTemplate(questions, template),
-        notes: [{ type: 'paragraph', children: [{ text: '' }] }],
+        notes: [
+          {
+            type: 'heading-one',
+            children: [{ text: templateTitle }],
+          },
+          {
+            type: 'heading-three',
+            children: [{ text: `Suggested frequency: ${templateFrequency}` }],
+          },
+          {
+            type: 'heading-two',
+            children: [{ text: 'Suggested questions:' }],
+          },
+          ...questions.map((currQuestion) => {
+            return {
+              type: 'bulleted-list',
+              children: [
+                {
+                  type: 'list-item',
+                  children: [
+                    {
+                      text: currQuestion.text,
+                    },
+                  ],
+                },
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      text: 'Answer: ',
+                    },
+                  ],
+                },
+              ],
+            };
+          }),
+        ],
       },
     };
+
     data[personId]['meetings'] = newMeetings;
-    storeData(
-      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
-      data
-    );
+    writeMeeting(data);
     res.sendStatus(200);
     return;
   }
@@ -245,10 +262,7 @@ router.put('/:personId/meetings/:meetingId', async (req, res) => {
     };
     data[personId]['meetings'] = newMeeting;
 
-    storeData(
-      `${process.cwd()}/apps/api/src/app/routes/people/data/data.json`,
-      data
-    );
+    writeMeeting(data);
     res.sendStatus(200);
     return;
   }

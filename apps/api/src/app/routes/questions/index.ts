@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getQuestions } from '../../../utils/readContent';
-import questionsFromTemplate from '../../../utils/questionsFromTemplate';
+import { questionsFromTemplate } from '@utils';
+import { writeQuestion } from '../../../utils/writeContent';
 
 export const router = Router();
 
@@ -62,19 +63,36 @@ export const router = Router();
  */
 router.get('/', async (req, res) => {
   const listOfQuestions = await getQuestions();
-  const questions = {
-    questions: {
-      count: Object.values(listOfQuestions).length,
-      data: listOfQuestions,
-    },
-  };
-  res.send(questions);
+  res.send(Object.values(listOfQuestions));
 });
 
-router.get('/:questionId', async (req, res) => {
-  const { questionId } = req.params;
+router.post('/', async (req, res) => {
+  const { text, templatesIds } = req.body;
+  console.log(text);
+
   const questions = await getQuestions();
-  const listOfQuestions = questionsFromTemplate(questions, questionId);
+  // Math.random() * (1000 - 500 + 1) + 500 it is just a temp thing
+  const newQuestionId = Math.floor(Math.random() * (1000 - 500 + 1) + 500);
+  const newQuestions = {
+    ...questions,
+    [newQuestionId]: {
+      id: String(newQuestionId),
+      text,
+      templatesIds,
+    },
+  };
+
+  writeQuestion(newQuestions);
+  res.sendStatus(200);
+});
+
+router.get('/templates/:templateId', async (req, res) => {
+  const { templateId } = req.params;
+  const questions = await getQuestions();
+  const listOfQuestions = questionsFromTemplate(
+    Object.values(questions),
+    templateId
+  );
   res.send(listOfQuestions);
 });
 

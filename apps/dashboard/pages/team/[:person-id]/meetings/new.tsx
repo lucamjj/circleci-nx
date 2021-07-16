@@ -1,26 +1,25 @@
 import * as React from 'react';
 import { useFormik } from 'formik';
 import {
-  Button,
   TextField,
   NativeSelect,
   InputLabel,
   FormControl,
   makeStyles,
 } from '@material-ui/core';
-import clsx from 'clsx';
 import useSWR from 'swr';
-import { templatesType, questionsType } from '@types';
+import { templatesType, questionInfoType } from '@types';
 import { useRouter } from 'next/router';
-import UsePostData from '../../../../utils/UsePostData';
+import { UsePostData } from '@hooks';
+import TransferList from '../../../../components/TransferList';
+import Stepper from '../../../../components/Stepper';
+import { questionsFromTemplate } from '@utils';
+import AddNewComponent from '../../../../components/AddNewQuestion';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   formElement: {
     display: 'block',
     margin: '40px 0',
-  },
-  submitBtn: {
-    margin: '80px 0',
   },
 }));
 
@@ -36,25 +35,50 @@ type formErrorsType = {
   template?: string;
 };
 
+const steps = {
+  '0': {
+    shortDescription: 'Title',
+    longDescription: 'Can you think of a meeting title?',
+  },
+  '1': {
+    shortDescription: 'Date',
+    longDescription: 'When is the meeting going to happen?',
+  },
+  '2': {
+    shortDescription: 'Template',
+    longDescription: 'Choose a template and questions',
+  },
+};
+
+const Step = ({
+  isValid,
+  children,
+}: {
+  isValid?: boolean;
+  children: JSX.Element;
+}) => {
+  return children;
+};
+
 const NewMeeting = () => {
   const router = useRouter();
   const {
     query: { id: personId },
   } = router;
 
-  const [currentTemplate, setCurrentTemplate] = React.useState(null);
+  const [chosenQuestions, setChosenQuestions] = React.useState([]);
+
+  const [currentTemplate, setCurrentTemplate] = React.useState('0');
   const classes = useStyles();
   const { data }: { data?: templatesType } = useSWR(
     'http://localhost:3333/api/templates'
   );
-  const { data: listOfQuestions }: { data?: questionsType } = useSWR([
-    currentTemplate
-      ? `http://localhost:3333/api/questions/${currentTemplate}`
-      : null,
-    1,
-  ]);
 
-  const { data: response, isInProgress, error, API } = UsePostData();
+  const { data: listOfQuestions }: { data?: questionInfoType[] } = useSWR(
+    `http://localhost:3333/api/questions`
+  );
+
+  const { data: response, API } = UsePostData();
 
   const formik = useFormik({
     initialValues: {
@@ -80,14 +104,27 @@ const NewMeeting = () => {
     },
     onSubmit: (values) => {
       console.log('send to ', personId);
-      console.log(values);
+      console.log({ ...values, questions: chosenQuestions });
 
       API.POST({
         url: `http://localhost:3333/api/people/${personId}/meetings`,
-        content: values,
+        content: { ...values, questions: chosenQuestions },
       });
     },
   });
+
+  const handleOnReset = () => {
+    formik.setValues({
+      title: '',
+      date: '',
+      template: '',
+    });
+    formik.setTouched({});
+  };
+
+  const handleOnFinish = () => {
+    formik.handleSubmit();
+  };
 
   React.useEffect(() => {
     if (response && response.status === 200) {
@@ -95,71 +132,126 @@ const NewMeeting = () => {
     }
   }, [router, response, personId]);
 
+  const getQuestions: questionInfoType[] = React.useMemo(() => {
+    if (listOfQuestions && currentTemplate) {
+      return questionsFromTemplate(
+        Object.values(listOfQuestions),
+        currentTemplate
+      );
+    }
+  }, [listOfQuestions, currentTemplate]);
+
+  React.useEffect(() => {
+    setChosenQuestions(getQuestions);
+  }, [getQuestions]);
+
   return (
     <>
-      <TextField
-        error={!!formik.errors.title}
-        helperText={formik.errors.title}
-        id={formik.errors.title ? 'error-meeting-title' : 'Meeting Title'}
-        label={'Meeting Title'}
-        name={'title'}
-        onChange={formik.handleChange}
-        className={classes.formElement}
-      />
-      <TextField
-        error={!!formik.errors.date}
-        id={formik.errors.date ? 'error-datetime-local' : 'datetime-local'}
-        label="Date and Time"
-        type="datetime-local"
-        name={'date'}
-        onChange={formik.handleChange}
-        className={classes.formElement}
-        InputLabelProps={{
-          shrink: true,
-        }}
-      />
-      <FormControl className={classes.formElement}>
-        <InputLabel htmlFor="age-native-simple">Meeting Template</InputLabel>
-        <NativeSelect
-          value={formik.values.template}
-          inputProps={{
-            name: 'template',
-            id: 'template',
-          }}
-          onChange={(newValue) => {
-            setCurrentTemplate(newValue.target.value);
-            formik.handleChange(newValue);
-          }}
-        >
-          <option aria-label="None" value="" />
-          {data &&
-            Object.entries(data).map(([id, { title, frequency: { text } }]) => (
-              <option value={id} key={id}>
-                {title} - suggested frequency: {text}
-              </option>
-            ))}
-        </NativeSelect>
-        {listOfQuestions ? (
-          <ul>
-            {Object.values(listOfQuestions).map((q) => (
-              <li key={q.id}>{q.text}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>Select a template to see the list of questions</p>
-        )}
-      </FormControl>
-      <Button
-        disabled={!formik.isValid}
-        variant="contained"
-        color="primary"
-        onClick={() => formik.handleSubmit()}
-        className={clsx(classes.formElement, classes.submitBtn)}
+      <Stepper
+        stepsContentDescription={steps}
+        handleOnReset={handleOnReset}
+        handleOnFinish={handleOnFinish}
       >
-        Submit
-      </Button>
+        <Step
+          isValid={formik.touched.title === true && formik.errors.title !== ''}
+        >
+          <TextField
+            error={formik.touched.title && !!formik.errors.title}
+            helperText={formik.errors.title}
+            id={formik.errors.title ? 'error-meeting-title' : 'Meeting Title'}
+            label={'Meeting Title'}
+            value={formik.values.title}
+            name={'title'}
+            onChange={(value) => {
+              formik.setTouched({ ...formik.touched, title: true });
+              formik.handleChange(value);
+            }}
+            className={classes.formElement}
+          />
+        </Step>
+        <Step
+          isValid={formik.touched.date === true && formik.errors.date !== ''}
+        >
+          <TextField
+            error={formik.touched.date && !!formik.errors.date}
+            id={formik.errors.date ? 'error-datetime-local' : 'datetime-local'}
+            label="Date and Time"
+            value={formik.values.date}
+            type="datetime-local"
+            name={'date'}
+            onChange={(value) => {
+              formik.setTouched({ ...formik.touched, date: true });
+              formik.handleChange(value);
+            }}
+            className={classes.formElement}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Step>
+        <Step
+          isValid={formik.touched.date === true && formik.errors.date !== ''}
+        >
+          <FormControl className={classes.formElement}>
+            <InputLabel htmlFor="age-native-simple">
+              Meeting Template
+            </InputLabel>
+            <NativeSelect
+              value={formik.values.template}
+              inputProps={{
+                name: 'template',
+                id: 'template',
+              }}
+              onChange={(newValue) => {
+                setCurrentTemplate(newValue.target.value);
+                formik.setTouched({ ...formik.touched, template: true });
+                formik.handleChange(newValue);
+              }}
+            >
+              <option aria-label="Free style" value={'0'}>
+                Free style
+              </option>
+              {data &&
+                Object.entries(data).map(
+                  ([
+                    id,
+                    {
+                      title,
+                      frequency: { text },
+                    },
+                  ]) => (
+                    <option
+                      aria-label={`template ${title}`}
+                      value={id}
+                      key={id}
+                    >
+                      {title} - suggested frequency: {text}
+                    </option>
+                  )
+                )}
+            </NativeSelect>
+            <div
+              style={{
+                margin: '20px 0',
+              }}
+            >
+              <AddNewComponent />
+            </div>
+            {listOfQuestions ? (
+              <TransferList
+                leftList={listOfQuestions}
+                rightList={currentTemplate !== '0' ? chosenQuestions : []}
+                cb={(list) => {
+                  setChosenQuestions(list);
+                }}
+              />
+            ) : (
+              'Fetching questions'
+            )}
+          </FormControl>
+        </Step>
+      </Stepper>
       {response && <p>Meeting added with success!!</p>}
-      {/* {response && router.replace('/')} */}
     </>
   );
 };

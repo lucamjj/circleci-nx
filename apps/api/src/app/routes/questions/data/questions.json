@@ -271,5 +271,15 @@
     "id": "61",
     "text": "What’s one thing we should start, stop and continue doing as a company?",
     "templatesIds": [4]
+  },
+  "562": {
+    "id": "562",
+    "text": "Do you test your code?",
+    "templatesIds": ["1", "2", "3"]
+  },
+  "719": {
+    "id": "719",
+    "text": "What's your favourite tech stack?",
+    "templatesIds": ["1"]
   }
 }

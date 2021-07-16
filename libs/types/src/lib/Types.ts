@@ -18,5 +18,5 @@ export type questionsType = {
 export type questionInfoType = {
   id: string;
   text: string;
-  templatesIds: [number];
+  templatesIds: number[];
 };
